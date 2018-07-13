@@ -4,9 +4,6 @@ import xml.sax
 import os, sys
 import getopt
 import json
-GENERAL = 'general_info.txt'
-DETAIL = 'detail_diff.txt'
-Debug = 0
 
 class ManifestHandler(xml.sax.ContentHandler):
 
@@ -79,14 +76,17 @@ def get_absolute_path(PWD, relative_path):
     else:
         return relative_path
 
-
 def main(argv):
     PWD = os.getcwd()
     old_repo = ''
     new_repo = ''
     output = ''
+    Debug = 0
+    GENERAL = 'general_info.txt'
+    DETAIL = 'detail_diff.txt'
+
     try:
-        opts, args = getopt.getopt(argv, 'hi:n:o:')
+        opts, args = getopt.getopt(argv, 'dhi:n:o:')
     except getopt.GetoptError:
         print 'diff_repo.py -i <old repo path> -n <new repo path> -o <output path>.'
         sys.exit(2)
@@ -108,6 +108,8 @@ def main(argv):
                 sys.exit(3)
         elif opt == '-o':
             output = get_absolute_path(PWD, arg)
+	elif opt == '-d':
+	    Debug = 1
 
     print '============= Param Info ==================='
     print 'old repo path: ' + old_repo
@@ -120,10 +122,29 @@ def main(argv):
     if Debug:
         output_old_repo = output + '/old_repo.json'
         output_new_repo = output + '/new_repo.json'
-        json.dump(json_old_repo, open(output_old_repo, 'w'))
-        json.dump(json_new_repo, open(output_new_repo, 'w'))
+#        json.dump(json_old_repo, open(output_old_repo, 'w'))
+#        json.dump(json_new_repo, open(output_new_repo, 'w'))
+        old_file = open(output_old_repo, 'w')
+	for key in json_old_repo:
+	  old_file.write(json_old_repo[key])
+	  old_file.write("\n")
+	old_file.close()
+
+        new_file = open(output_new_repo, 'w')
+	for key in json_new_repo:
+	  new_file.write(json_new_repo[key])
+	  new_file.write("\n")
+	new_file.close()
+
     discarded, same, added = classified_jsons(json_old_repo, json_new_repo)
-    general_str = '======================== General Info =========================\n' + 'Old git amount    : ' + str(len(discarded) + len(same)) + '\n' + 'New git amount    : ' + str(len(same) + len(added)) + '\n' + '\n' + 'Discarded amount  : ' + str(len(discarded)) + '\n' + 'Added amount      : ' + str(len(added)) + '\n' + 'Continue to used  : ' + str(len(same)) + '\n' + '\n'
+    general_str = '======================== General Info =========================\n' \
+                + 'Old git amount           : ' + str(len(discarded) + len(same)) \
+		+ '\n' + 'New git amount    : ' + str(len(same) + len(added)) + '\n' \
+		+ '\n' + 'Discarded amount  : ' + str(len(discarded)) + '\n' \
+		+ 'Added amount             : ' + str(len(added)) + '\n' \
+		+ 'Continue to used         : ' + str(len(same)) \
+		+ '\n' + '\n'
+
     general_file = output + '/' + GENERAL
     detail_file = output + '/' + DETAIL
     general = open(general_file, 'w')
