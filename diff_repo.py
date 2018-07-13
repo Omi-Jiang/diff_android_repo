@@ -108,6 +108,8 @@ def main(argv):
                 sys.exit(3)
         elif opt == '-o':
             output = get_absolute_path(PWD, arg)
+	    if not os.path.exists(output):
+	        os.makedirs(output)
 	elif opt == '-d':
 	    Debug = 1
 
